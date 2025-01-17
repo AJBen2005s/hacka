@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -118,7 +117,7 @@ const Form = () => {
           !formData[`${field.field}Date`]
         ) {
           isValid = false;
-          validationErrors[field.field] = "*Please fill out all fields";
+          validationErrors[field.field] = "Please fill out all fields";
         }
       }
     });
@@ -132,14 +131,20 @@ const Form = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Post data to backend
     axios
-      .post("/api/inspections", { type: formType, room, data: formData })
-      .then(() => {
-        alert("Inspection created successfully!");
+      .post("http://localhost:3000/form/upload", {
+        type: formType,
+        room: room,
+        data: formData
+      })
+      .then((response) => {
+        alert("Inspection submitted successfully!");
+        navigate("/success"); // Navigate to a success page if needed
       })
       .catch((error) => {
-        console.error("Error creating inspection:", error);
-        alert("Failed to create inspection.");
+        console.error("Error submitting the inspection:", error);
+        alert("Failed to submit inspection. Please try again.");
       });
   };
 
@@ -241,14 +246,14 @@ const Form = () => {
                   />
                   <input
                     type="text"
-                    placeholder="Person"
+                    placeholder="Person Responsible"
                     value={formData[`${field.field}Person`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Person`)}
                     className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="date"
-                    placeholder="Completion Date"
+                    placeholder="Date"
                     value={formData[`${field.field}Date`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Date`)}
                     className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -259,13 +264,13 @@ const Form = () => {
           ))}
 
           {/* Submit Button */}
-          <div className="">
+          <div className="mt-6">
             <button
               type="submit"
-              className="w-full py-3 bg-blue-500 text-white rounded-lg"
+              className={`w-full p-3 text-white font-bold rounded-lg ${isFormValid ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
               disabled={!isFormValid}
             >
-              Submit
+              Submit Inspection
             </button>
           </div>
         </form>

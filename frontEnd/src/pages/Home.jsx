@@ -8,10 +8,14 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Home = () => {
     const [chartData, setChartData] = useState(null);
+    const [completedRooms, setCompletedRooms] = useState([]);
+    const [nonCompletedRooms, setNonCompletedRooms] = useState([]);
+    const [error, setError] = useState(null);
 
-    // Fetch data for the pie chart
+    // Fetch data for the pie chart and room data from API
     useEffect(() => {
-        axios.get('/form/room-stats') // Replace this with the correct API endpoint
+        // Fetch room stats for pie chart
+        axios.get('/form/room-stats') // Replace this with the correct API endpoint for room stats
             .then(response => {
                 const { numOfRoomsDone, numOfRoomsNotDone } = response.data; // Destructure API response
                 const total = numOfRoomsDone + numOfRoomsNotDone;
@@ -36,12 +40,34 @@ const Home = () => {
             })
             .catch(error => {
                 console.error('Error fetching chart data:', error);
+                setError('Error fetching chart data');
+            });
+
+        // Fetch room data for completed and non-completed rooms
+        axios.get('/form/rooms') // Replace this with the correct API endpoint for rooms
+            .then(response => {
+                const rooms = response.data; // Assuming the response returns an array of rooms
+
+                // Split rooms into completed and non-completed
+                const completed = rooms.filter(room => room.status === 'completed');
+                const nonCompleted = rooms.filter(room => room.status !== 'completed');
+
+                setCompletedRooms(completed);
+                setNonCompletedRooms(nonCompleted);
+            })
+            .catch(error => {
+                console.error('Error fetching room data:', error);
+                setError('Error fetching room data');
             });
     }, []);
 
+    if (error) {
+        return <p className="text-danger">{error}</p>;
+    }
+
     return (
         <div>
-            {/* Inline styles applied to center the title */}
+            {/* Pie Chart Section */}
             <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Room Completion</h2>
             <div style={{ width: '300px', height: '300px', margin: '0 auto' }}>
                 {chartData ? (
@@ -65,6 +91,62 @@ const Home = () => {
                 ) : (
                     <p>Loading chart data...</p>
                 )}
+            </div>
+
+            {/* Room List Section */}
+            <div style={{ maxWidth: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', display: 'flex', justifyContent: 'center' }}>
+                    <tbody>
+                        <tr>
+                            <td style={{ padding: '10px', verticalAlign: 'top', textAlign: 'center' }}>
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                    backgroundColor: '#f8f9fa',
+                                    width: '100%',
+                                    maxHeight: '300px',
+                                    overflowY: 'auto'
+                                }}>
+                                    <h4 style={{ textAlign: 'center', marginBottom: '20px' }}>Completed Rooms</h4>
+                                    {completedRooms.length > 0 ? (
+                                        <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
+                                            {completedRooms.map((room) => (
+                                                <li key={room.id}>{room.roomNumber}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>No completed rooms.</p>
+                                    )}
+                                </div>
+                            </td>
+                            <td style={{ padding: '10px', verticalAlign: 'top', textAlign: 'center' }}>
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '20px',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                    backgroundColor: '#f8f9fa',
+                                    width: '100%',
+                                    maxHeight: '300px',
+                                    overflowY: 'auto'
+                                }}>
+                                    <h4 style={{ textAlign: 'center', marginBottom: '20px' }}>Non-Completed Rooms</h4>
+                                    {nonCompletedRooms.length > 0 ? (
+                                        <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
+                                            {nonCompletedRooms.map((room) => (
+                                                <li key={room.id}>{room.roomNumber}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>No non-completed rooms.</p>
+                                    )}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

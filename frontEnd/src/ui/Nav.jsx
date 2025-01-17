@@ -1,15 +1,10 @@
 import { Link, NavLink } from 'react-router-dom';
-import logo from '../assets/logo.png'; // !!!Ensure logo is correctly imported!!!
 
 const Nav = () => {
   // Array of navigation links
   const navLinks = [
     { path: '/', name: 'Home' },
     { path: '/form', name: 'Form' },
-    { path: '/dashboard', name: 'Dashboard' },
-    { path: '/signup', name: 'Signup' },
-    { path: '/login', name: 'Login' },
-    { path: '/logout', name: 'Logout' },
   ];
 
   return (
@@ -17,7 +12,6 @@ const Nav = () => {
       <div className="container-fluid d-flex align-items-center justify-content-between">
         {/* Logo and Brand Name on the Left */}
         <Link to="/" className="navbar-brand d-flex align-items-center">
-          <img src={logo} alt="Logo" style={{ height: '40px', marginRight: '10px' }} />
           5S+S
         </Link>
 
