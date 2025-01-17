@@ -71,10 +71,23 @@ const inspectionForms = {
 const Form = () => {
   const [formType, setFormType] = useState("Classroom");
   const [room, setRoom] = useState(""); // State for room field
+  const [roomNumbers, setRoomNumbers] = useState([]); // State for room numbers
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch room numbers from the API
+    axios
+      .get("http://localhost:3000/form/rooms/")
+      .then((response) => {
+        setRoomNumbers(response.data); // Assuming the response is an array of room numbers
+      })
+      .catch((error) => {
+        console.error("Error fetching room numbers:", error);
+      });
+  }, []);
 
   const handleTypeChange = (e) => {
     setFormType(e.target.value);
@@ -164,14 +177,20 @@ const Form = () => {
             <label htmlFor="room" className="block text-lg font-bold text-gray-700 mb-2">
               Room Number
             </label>
-            <input
-              type="text"
+            <select
               id="room"
               value={room}
               onChange={handleRoomChange}
               className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-            />
+            >
+              <option value="">Select Room Number</option>
+              {roomNumbers.map((roomNumber, index) => (
+                <option key={index} value={roomNumber}>
+                  {roomNumber}
+                </option>
+              ))}
+            </select>
             {errors.room && (
               <div className="text-red-600 text-sm font-bold mt-2">{errors.room}</div>
             )}
@@ -229,50 +248,62 @@ const Form = () => {
               )}
 
               {formData[field.field] === "No" && (
-                <div className="mt-4 space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Deficiency"
-                    value={formData[`${field.field}Deficiency`] || ""}
-                    onChange={(e) => handleChange(e, `${field.field}Deficiency`)}
-                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Action"
-                    value={formData[`${field.field}Action`] || ""}
-                    onChange={(e) => handleChange(e, `${field.field}Action`)}
-                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Person Responsible"
-                    value={formData[`${field.field}Person`] || ""}
-                    onChange={(e) => handleChange(e, `${field.field}Person`)}
-                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="date"
-                    placeholder="Date"
-                    value={formData[`${field.field}Date`] || ""}
-                    onChange={(e) => handleChange(e, `${field.field}Date`)}
-                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="space-y-4 mt-4">
+                  <div className="flex items-center">
+                    <label htmlFor={`${field.field}Deficiency`} className="text-sm font-semibold text-gray-600">Deficiency:</label>
+                    <input
+                      type="text"
+                      id={`${field.field}Deficiency`}
+                      value={formData[`${field.field}Deficiency`] || ""}
+                      onChange={(e) => handleChange(e, `${field.field}Deficiency`)}
+                      className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <label htmlFor={`${field.field}Action`} className="text-sm font-semibold text-gray-600">Action:</label>
+                    <input
+                      type="text"
+                      id={`${field.field}Action`}
+                      value={formData[`${field.field}Action`] || ""}
+                      onChange={(e) => handleChange(e, `${field.field}Action`)}
+                      className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <label htmlFor={`${field.field}Person`} className="text-sm font-semibold text-gray-600">Person Responsible:</label>
+                    <input
+                      type="text"
+                      id={`${field.field}Person`}
+                      value={formData[`${field.field}Person`] || ""}
+                      onChange={(e) => handleChange(e, `${field.field}Person`)}
+                      className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <label htmlFor={`${field.field}Date`} className="text-sm font-semibold text-gray-600">Date:</label>
+                    <input
+                      type="date"
+                      id={`${field.field}Date`}
+                      value={formData[`${field.field}Date`] || ""}
+                      onChange={(e) => handleChange(e, `${field.field}Date`)}
+                      className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               )}
             </div>
           ))}
 
           {/* Submit Button */}
-          <div className="mt-6">
-            <button
-              type="submit"
-              className={`w-full p-3 text-white font-bold rounded-lg ${isFormValid ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
-              disabled={!isFormValid}
-            >
-              Submit Inspection
-            </button>
-          </div>
+          <button
+            type="submit"
+            className={`w-full py-3 text-lg font-bold rounded-lg mt-6 focus:outline-none ${
+              isFormValid ? "bg-blue-500" : "bg-gray-500 cursor-not-allowed"
+            }`}
+            disabled={!isFormValid}
+          >
+            Submit
+          </button>
         </form>
       </div>
     </div>
