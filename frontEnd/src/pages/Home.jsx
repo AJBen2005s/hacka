@@ -7,33 +7,27 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Home = () => {
-    const [inspections, setInspections] = useState([]);
     const [chartData, setChartData] = useState(null);
-
-    // Fetch inspections data
-    useEffect(() => {
-        axios.get('/api/inspections')
-            .then(response => {
-                console.log('API Response:', response.data); // Debug API response
-                setInspections(Array.isArray(response.data) ? response.data : []);
-            })
-            .catch(error => {
-                console.error('Error fetching inspections:', error);
-                setInspections([]); // Handle error by setting an empty array
-            });
-    }, []);
 
     // Fetch data for the pie chart
     useEffect(() => {
-        axios.get('/api/chart-data') // Replace this with your actual API endpoint
+        axios.get('/form/room-stats') // Replace this with the correct API endpoint
             .then(response => {
-                const { value1, value2 } = response.data;
+                const { numOfRoomsDone, numOfRoomsNotDone } = response.data; // Destructure API response
+                const total = numOfRoomsDone + numOfRoomsNotDone;
+                const percentages = [
+                    ((numOfRoomsDone / total) * 100).toFixed(2),
+                    ((numOfRoomsNotDone / total) * 100).toFixed(2),
+                ];
                 setChartData({
-                    labels: ['Value 1', 'Value 2'],
+                    labels: [
+                        `Rooms Done (${percentages[0]}%)`,
+                        `Rooms Not Done (${percentages[1]}%)`,
+                    ], // Include percentages in labels
                     datasets: [
                         {
-                            label: 'Chart Data',
-                            data: [value1, value2],
+                            label: 'Room Completion',
+                            data: [numOfRoomsDone, numOfRoomsNotDone], // Use fetched data
                             backgroundColor: ['#FF6384', '#36A2EB'],
                             hoverBackgroundColor: ['#FF6384', '#36A2EB'],
                         },
@@ -47,39 +41,31 @@ const Home = () => {
 
     return (
         <div>
-            {Array.isArray(inspections) && inspections.length > 0 ? (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Location</th>
-                            <th>Type</th>
-                            <th>Performed By</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {inspections.map((inspection) => (
-                            <tr key={inspection.id}>
-                                <td>{new Date(inspection.date).toLocaleDateString()}</td>
-                                <td>{inspection.location}</td>
-                                <td>{inspection.type}</td>
-                                <td>{inspection.performedBy}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p>No inspections available.</p>
-            )}
-
-            {chartData ? (
-                <div>
-                    <h2>Pie Chart</h2>
-                    <Pie data={chartData} />
-                </div>
-            ) : (
-                <p>Loading chart data...</p>
-            )}
+            {/* Inline styles applied to center the title */}
+            <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Room Completion</h2>
+            <div style={{ width: '300px', height: '300px', margin: '0 auto' }}>
+                {chartData ? (
+                    <Pie
+                        data={chartData}
+                        options={{
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (tooltipItem) {
+                                            const value = tooltipItem.raw;
+                                            const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = ((value / total) * 100).toFixed(2);
+                                            return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                        },
+                                    },
+                                },
+                            },
+                        }}
+                    />
+                ) : (
+                    <p>Loading chart data...</p>
+                )}
+            </div>
         </div>
     );
 };

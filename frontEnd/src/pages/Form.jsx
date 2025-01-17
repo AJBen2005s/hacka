@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -66,8 +67,11 @@ const inspectionForms = {
   ]
 };
 
+
+
 const Form = () => {
   const [formType, setFormType] = useState("Classroom");
+  const [room, setRoom] = useState(""); // State for room field
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [isFormValid, setIsFormValid] = useState(false);
@@ -80,6 +84,10 @@ const Form = () => {
     setIsFormValid(false);
   };
 
+  const handleRoomChange = (e) => {
+    setRoom(e.target.value);
+  };
+
   const handleChange = (e, field) => {
     setFormData({ ...formData, [field]: e.target.value });
     setErrors({ ...errors, [field]: false });
@@ -89,6 +97,13 @@ const Form = () => {
     let isValid = true;
     let validationErrors = {};
 
+    // Validate room field
+    if (!room) {
+      isValid = false;
+      validationErrors.room = "*Room field is required";
+    }
+
+    // Validate inspection fields
     inspectionForms[formType].forEach((field) => {
       if (!formData[field.field]) {
         isValid = false;
@@ -103,7 +118,7 @@ const Form = () => {
           !formData[`${field.field}Date`]
         ) {
           isValid = false;
-          validationErrors[field.field] = "*Please fill out all required fields for 'No' answer";
+          validationErrors[field.field] = "*Please fill out all fields";
         }
       }
     });
@@ -118,10 +133,9 @@ const Form = () => {
     if (!validateForm()) return;
 
     axios
-      .post("/api/inspections", { type: formType, data: formData })
+      .post("/api/inspections", { type: formType, room, data: formData })
       .then(() => {
         alert("Inspection created successfully!");
-        navigate("/dashboard");
       })
       .catch((error) => {
         console.error("Error creating inspection:", error);
@@ -131,121 +145,113 @@ const Form = () => {
 
   useEffect(() => {
     validateForm();
-  }, [formData]);
+  }, [formData, room]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <header className="bg-white shadow-md py-4 px-6 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">New Inspection</h1>
-      </header>
-      <main className="container mx-auto">
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow">
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="type">Inspection Type</label>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <div className="bg-white p-8 shadow-lg rounded-lg w-full max-w-lg">
+        <header className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-700">Create Inspection</h1>
+        </header>
+        <form onSubmit={handleSubmit} className="text-center">
+          {/* Room Input Field */}
+          <div className="mb-6">
+            <label htmlFor="room" className="block text-lg font-bold text-gray-700 mb-2">
+              Room Number
+            </label>
+            <input
+              type="text"
+              id="room"
+              value={room}
+              onChange={handleRoomChange}
+              className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            {errors.room && (
+              <div className="text-red-600 text-sm font-bold mt-2">{errors.room}</div>
+            )}
+          </div>
+
+          {/* Inspection Type Dropdown */}
+          <div className="mb-6">
+            <label htmlFor="formType" className="block text-lg font-bold text-gray-700 mb-2">
+              Inspection Type
+            </label>
             <select
-              id="type"
+              id="formType"
               value={formType}
               onChange={handleTypeChange}
-              required
-              className="w-full px-4 py-2 border rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {Object.keys(inspectionForms).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
+              <option value="Classroom">Classroom</option>
+              <option value="Office">Office</option>
+              <option value="Shop">Shop</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Laboratory">Laboratory</option>
+              <option value="Culinary">Culinary</option>
             </select>
           </div>
 
+          {/* Inspection Fields */}
           {inspectionForms[formType].map((field) => (
-            <div key={field.id} className="mb-4">
-              <label className="block text-gray-700 font-medium mb-2">{field.question}</label>
-              <div className="btn-group btn-group-toggle" data-toggle="buttons">
-                <label
-                  className={`btn ${formData[field.field] === "Yes" ? "btn-success active" : "btn-outline-secondary"}` }
-                  role="button"
-                >
-                  <input
-                    type="radio"
-                    name={field.field}
-                    value="Yes"
-                    checked={formData[field.field] === "Yes"}
-                    onChange={(e) => handleChange(e, field.field)}
-                    className="d-none"
-                    required
-                  />
-                  YES
-                </label>
-                <label
-                  className={`btn ${formData[field.field] === "No" ? "btn-danger active" : "btn-outline-secondary"}` }
-                  role="button"
-                >
-                  <input
-                    type="radio"
-                    name={field.field}
-                    value="No"
-                    checked={formData[field.field] === "No"}
-                    onChange={(e) => handleChange(e, field.field)}
-                    className="d-none"
-                    required
-                  />
-                  NO
-                </label>
-                <label
-                  className={`btn ${formData[field.field] === "N/A" ? "btn-secondary active" : "btn-outline-secondary"}` }
-                  role="button"
-                >
-                  <input
-                    type="radio"
-                    name={field.field}
-                    value="N/A"
-                    checked={formData[field.field] === "N/A"}
-                    onChange={(e) => handleChange(e, field.field)}
-                    className="d-none"
-                    required
-                  />
-                  N/A
-                </label>
+            <div key={field.id} className="mb-6">
+              <label className="block text-lg font-bold text-gray-700 mb-2 text-center">
+                {field.question}
+              </label>
+              <div className="flex justify-center">
+                {["Yes", "No", "N/A"].map((answer) => (
+                  <label
+                    key={answer}
+                    className={`btn ${formData[field.field] === answer ? `btn-${answer === "Yes" ? "success" : answer === "No" ? "danger" : "secondary"} active` : "btn-outline-secondary"}`}
+                    role="button"
+                  >
+                    <input
+                      type="radio"
+                      name={field.field}
+                      value={answer}
+                      checked={formData[field.field] === answer}
+                      onChange={(e) => handleChange(e, field.field)}
+                      className="d-none"
+                      required
+                    />
+                    {answer}
+                  </label>
+                ))}
               </div>
 
-              {/* Error message for missing selection */}
               {errors[field.field] && (
                 <div className="text-red-600 text-sm font-bold mt-2">{errors[field.field]}</div>
               )}
 
-              {/* If "No" is selected, make these fields required */}
               {formData[field.field] === "No" && (
-                <div className="mt-2">
+                <div className="mt-4 space-y-4">
                   <input
                     type="text"
                     placeholder="Deficiency"
                     value={formData[`${field.field}Deficiency`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Deficiency`)}
-                    className="w-full px-4 py-2 border rounded shadow mb-2"
-                    required
+                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="text"
-                    placeholder="Action to rectify"
+                    placeholder="Action"
                     value={formData[`${field.field}Action`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Action`)}
-                    className="w-full px-4 py-2 border rounded shadow mb-2"
-                    required
+                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="text"
-                    placeholder="Person Responsible"
+                    placeholder="Person"
                     value={formData[`${field.field}Person`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Person`)}
-                    className="w-full px-4 py-2 border rounded shadow mb-2"
-                    required
+                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <input
                     type="date"
+                    placeholder="Completion Date"
                     value={formData[`${field.field}Date`] || ""}
                     onChange={(e) => handleChange(e, `${field.field}Date`)}
-                    className="w-full px-4 py-2 border rounded shadow"
-                    required
+                    className="w-full p-3 border rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -253,15 +259,17 @@ const Form = () => {
           ))}
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            className={`px-6 py-2 rounded shadow ${isFormValid ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"} text-white`}
-            disabled={!isFormValid}
-          >
-            Submit
-          </button>
+          <div className="">
+            <button
+              type="submit"
+              className="w-full py-3 bg-blue-500 text-white rounded-lg"
+              disabled={!isFormValid}
+            >
+              Submit
+            </button>
+          </div>
         </form>
-      </main>
+      </div>
     </div>
   );
 };
